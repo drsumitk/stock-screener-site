@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Weekly Stock Screener</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Weekly Stock Screener</h1>
+    <p class="sub" id="meta">Loading…</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" aria-label="Market">
+    <button data-market="india" aria-selected="true">India · Nifty 100</button>
+    <button data-market="us" aria-selected="false">US · S&amp;P 500</button>
+    <button data-market="about" aria-selected="false">Method and run log</button>
+  </nav>
+  <nav class="tabs sub-tabs" id="views" aria-label="View">
+    <button data-view="Shortlist" aria-selected="true">Shortlist <span class="count" data-count="Shortlist"></span></button>
+    <button data-view="companies" aria-selected="false">All companies <span class="count" data-count="companies"></span></button>
+    <button data-view="banks" aria-selected="false">Banks <span class="count" data-count="banks"></span></button>
+    <button data-view="Insufficient data" aria-selected="false">Not ranked <span class="count" data-count="Insufficient data"></span></button>
+  </nav>
+
+  <section class="filters" id="filters" aria-label="Filters">
+    <label>Search <input type="search" id="q" placeholder="ticker or company"></label>
+    <label>Sector <select id="sector"><option value="">All sectors</option></select></label>
+    <label>Minimum composite <select id="minscore">
+      <option value="">Any</option><option value="5">5+</option><option value="6">6+</option>
+      <option value="7">7+</option><option value="8">8+</option>
+    </select></label>
+    <label class="check"><input type="checkbox" id="noflags"> No red flags</label>
+  </section>
+
+  <p class="hint" id="hint"></p>
+  <section id="detail" class="card detail" hidden></section>
+  <div class="tablewrap" id="tablewrap"><table id="table"><thead></thead><tbody></tbody></table></div>
+  <section id="about" hidden></section>
+</main>
+
+<footer class="wrap foot">
+  Screening aid built from the ratios in Stock_Evaluation_Ratios.docx, updated every Monday. Not investment advice:
+  read the company's filings before acting. US figures: SEC EDGAR filings and Finnhub prices. India figures: ROIC.AI.
+  Figures marked AI were read by Claude from company or exchange documents and checked against the quoted page.
+  US sector classification from Wikipedia's "List of S&amp;P 500 companies" (CC BY-SA 4.0).
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
