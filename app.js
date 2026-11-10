@@ -164,7 +164,8 @@ function showDetail(s) {
   d.append(el("p", "facts", [
     s.sector, s.kind === "bank" ? "bank" : s.kind === "financial" ? "financial (non-bank)" : "company",
     s.rank ? `rank ${s.rank} in market` : "not ranked", s.sector_rank ? `sector rank ${s.sector_rank}` : null,
-    s.price != null ? `price ${fmt(s.price)}${s.price_date ? " (" + s.price_date + ")" : ""}` : null,
+    s.price != null ? `price ${s.price_currency || ""} ${fmt(s.price)}${s.price_date ? " (" + s.price_date + ")" : ""}` : null,
+    s.price_note || null,
     s.period ? `figures: ${s.period} to ${s.period_end}` : null, s.source ? `source ${s.source}` : null,
     s.data_read ? `statements read ${s.data_read}` : null,
   ].filter(Boolean).join(" · ")));
