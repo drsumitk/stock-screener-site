@@ -86,5 +86,12 @@
   }
  },
  "shortlist_top_fraction": 0.1,
- "min_coverage": 0.6
+ "min_coverage": 0.6,
+ "subjective": [
+  "moat",
+  "governance"
+ ],
+ "subjective_flags": [
+  "adverse bank news or management change"
+ ]
 }

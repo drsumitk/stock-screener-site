@@ -1,7 +1,7 @@
 "use strict";
 // All page text is built with textContent / createElement; data never goes into innerHTML.
 
-const state = { stocks: [], meta: {}, market: "india", view: "Shortlist", sort: "rank", dir: 1, open: null };
+const state = { stocks: [], meta: {}, market: "india", view: "Shortlist", sort: "rank", dir: 1, open: null, subj: true };
 const $ = (id) => document.getElementById(id);
 
 function el(tag, cls, text) {
@@ -43,7 +43,6 @@ async function init() {
     return;
   }
   const m = state.meta;
-  $("meta").textContent = `Screen of ${m.date} · ${state.stocks.length} stocks · Shortlist = top ${Math.round(100 * (m.shortlist_top_fraction || 0))}% per market with no red flag`;
   document.querySelectorAll("[data-market]").forEach((b) => b.addEventListener("click", () => {
     state.market = b.dataset.market; state.open = null;
     document.querySelectorAll("[data-market]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
@@ -55,7 +54,63 @@ async function init() {
     render();
   }));
   ["q", "sector", "minscore", "noflags"].forEach((id) => $(id).addEventListener("input", render));
-  fillSectors(); render();
+  try { state.subj = localStorage.getItem("screener.subj") !== "off"; } catch (e) { /* storage unavailable */ }
+  $("subj").checked = state.subj;
+  $("subj").addEventListener("input", () => {
+    state.subj = $("subj").checked;
+    try { localStorage.setItem("screener.subj", state.subj ? "on" : "off"); } catch (e) { /* ignore */ }
+    recompute(); render();
+  });
+  recompute(); fillSectors(); render();
+}
+
+// Recompute section scores, composite, coverage, ranks and tiers in the browser, with or without the
+// judgement-based parameters switched off (with them on, the weekly run's own results are shown).
+function pyRound(x) { const f = Math.floor(x), d = x - f; if (Math.abs(d - 0.5) < 1e-9) return f % 2 === 0 ? f : f + 1; return Math.round(x); }
+function recompute() {
+  const m = state.meta, minCov = m.min_coverage || 0.6, frac = m.shortlist_top_fraction || 0.1;
+  const subjFlags = new Set(m.subjective_flags || []);
+  if (state.subj) {
+    // Switch on: use the weekly run's own results unchanged.
+    for (const s of state.stocks) {
+      s.v = { sections: s.sections || {}, composite: s.composite, coverage: s.coverage, flags: s.flags || [],
+              rank: s.rank, tier: s.tier, sector_rank: s.sector_rank, change: s.change };
+    }
+    $("meta").textContent = `Screen of ${m.date} · ${state.stocks.length} stocks · Shortlist = top ${Math.round(100 * frac)}% per market with no red flag`;
+    return;
+  }
+  for (const s of state.stocks) {
+    const acc = {}, wt = {}; let app = 0, scored = 0;
+    for (const p of s.params || []) {
+      if (!state.subj && p.subjective) continue;
+      if (p.counts === false) continue;
+      app += 1;
+      if (p.score == null) continue;
+      scored += 1;
+      const w = p.weight || 1;
+      acc[p.section] = (acc[p.section] || 0) + p.score * w; wt[p.section] = (wt[p.section] || 0) + w;
+    }
+    const sections = {};
+    for (const k of Object.keys(acc)) sections[k] = acc[k] / wt[k];
+    const W = (m.weights || {})[s.kind === "bank" ? "bank" : "general"] || {};
+    let num = 0, den = 0;
+    for (const [k, v] of Object.entries(sections)) { const w = W[k] ?? 1; num += v * w; den += w; }
+    s.v = { sections, composite: den ? num / den : null, coverage: app ? scored / app : 0,
+            flags: state.subj ? (s.flags || []) : (s.flags || []).filter((f) => !subjFlags.has(f)),
+            rank: null, tier: "Insufficient data", sector_rank: "", change: state.subj ? s.change : null };
+  }
+  for (const market of ["india", "us"]) {
+    const ranked = state.stocks.filter((s) => s.market === market && s.v.composite != null && s.v.coverage >= minCov)
+      .sort((a, b) => b.v.composite - a.v.composite);
+    const cut = Math.max(1, pyRound(ranked.length * frac));
+    ranked.forEach((s, i) => { s.v.rank = i + 1; s.v.tier = (i + 1 <= cut && !s.v.flags.length) ? "Shortlist" : "Ranked"; });
+    const bySec = {};
+    for (const s of ranked) (bySec[s.sector] = bySec[s.sector] || []).push(s);
+    for (const g of Object.values(bySec)) g.forEach((s, i) => { s.v.sector_rank = `${i + 1} of ${g.length}`; });
+  }
+  const off = !state.subj;
+  $("meta").textContent = `Screen of ${m.date} · ${state.stocks.length} stocks · Shortlist = top ${Math.round(100 * frac)}% per market with no red flag` +
+    (off ? " · judgement-based parameters OFF (measured and reported figures only)" : "");
 }
 
 function fillSectors() {
@@ -67,8 +122,8 @@ function fillSectors() {
 }
 
 function inView(s, view) {
-  if (view === "Shortlist") return s.tier === "Shortlist";
-  if (view === "Insufficient data") return s.tier === "Insufficient data";
+  if (view === "Shortlist") return s.v.tier === "Shortlist";
+  if (view === "Insufficient data") return s.v.tier === "Insufficient data";
   if (view === "banks") return s.kind === "bank";
   return s.kind !== "bank";
 }
@@ -79,23 +134,23 @@ function rows() {
   return state.stocks.filter((s) => s.market === state.market
     && (!q || (s.ticker + " " + s.name).toLowerCase().includes(q))
     && (!sector || s.sector === sector)
-    && (!min || (s.composite || 0) >= min)
-    && (!nof || !(s.flags || []).length));
+    && (!min || (s.v.composite || 0) >= min)
+    && (!nof || !s.v.flags.length));
 }
 
 function columns() {
   const sec = state.view === "banks" ? state.meta.sections.bank : state.view === "companies" ? state.meta.sections.general : [];
   const cols = [
-    { k: "rank", t: "Rank", num: true, v: (s) => s.rank },
-    { k: "change", t: "Change", num: true, v: (s) => s.change },
+    { k: "rank", t: "Rank", num: true, v: (s) => s.v.rank },
+    { k: "change", t: "Change", num: true, v: (s) => s.v.change },
     { k: "ticker", t: "Ticker", v: (s) => s.ticker },
     { k: "name", t: "Company", v: (s) => s.name },
     { k: "sector", t: "Sector", v: (s) => s.sector },
-    { k: "composite", t: "Composite", num: true, v: (s) => s.composite, score: true },
+    { k: "composite", t: "Composite", num: true, v: (s) => s.v.composite, score: true },
   ];
-  for (const k of sec) cols.push({ k: "sec_" + k, t: state.meta.section_labels[k], num: true, v: (s) => (s.sections || {})[k], score: true });
-  cols.push({ k: "coverage", t: "Data coverage", num: true, v: (s) => s.coverage });
-  cols.push({ k: "flags", t: "Red flags", v: (s) => (s.flags || []).join("; ") });
+  for (const k of sec) cols.push({ k: "sec_" + k, t: state.meta.section_labels[k], num: true, v: (s) => s.v.sections[k], score: true });
+  cols.push({ k: "coverage", t: "Data coverage", num: true, v: (s) => s.v.coverage });
+  cols.push({ k: "flags", t: "Red flags", v: (s) => s.v.flags.join("; ") });
   return cols;
 }
 
@@ -137,7 +192,7 @@ function render() {
   }
   thead.append(hr);
   for (const s of list) {
-    const tr = el("tr", s.tier === "Shortlist" ? "short" : null);
+    const tr = el("tr", s.v.tier === "Shortlist" ? "short" : null);
     for (const c of cols) {
       const v = c.v(s);
       const td = el("td", (c.num ? "num" : "") + (c.k === "flags" ? " flags" : ""));
@@ -159,21 +214,22 @@ function showDetail(s) {
   close.addEventListener("click", () => { state.open = null; d.hidden = true; });
   d.append(close);
   const h = el("h2", null, `${s.ticker} · ${s.name}`);
-  h.append(el("span", "badge " + (s.tier === "Shortlist" ? "ok" : ""), s.tier));
+  h.append(el("span", "badge " + (s.v.tier === "Shortlist" ? "ok" : ""), s.v.tier));
   d.append(h);
   d.append(el("p", "facts", [
     s.sector, s.kind === "bank" ? "bank" : s.kind === "financial" ? "financial (non-bank)" : "company",
-    s.rank ? `rank ${s.rank} in market` : "not ranked", s.sector_rank ? `sector rank ${s.sector_rank}` : null,
+    s.v.rank ? `rank ${s.v.rank} in market` : "not ranked", s.v.sector_rank ? `sector rank ${s.v.sector_rank}` : null,
     s.price != null ? `price ${s.price_currency || ""} ${fmt(s.price)}${s.price_date ? " (" + s.price_date + ")" : ""}` : null,
     s.price_note || null,
     s.period ? `figures: ${s.period} to ${s.period_end}` : null, s.source ? `source ${s.source}` : null,
     s.data_read ? `statements read ${s.data_read}` : null,
   ].filter(Boolean).join(" · ")));
-  if ((s.flags || []).length) d.append(el("p", "ev warnb", "Red flags: " + s.flags.join("; ")));
+  if (s.v.flags.length) d.append(el("p", "ev warnb", "Red flags: " + s.v.flags.join("; ")));
+  if (!state.subj) d.append(el("p", "ev muted", "Judgement-based parameters are switched off: moat and the bank news check are shown but not counted."));
   const grid = el("div", "secgrid");
-  grid.append(el("div", "secbox", `Composite ${s.composite == null ? "–" : s.composite.toFixed(2)}`));
-  for (const [k, v] of Object.entries(s.sections || {})) grid.append(el("div", "secbox", `${state.meta.section_labels[k]}: ${v == null ? "–" : v.toFixed(1)}`));
-  grid.append(el("div", "secbox", `Data coverage ${Math.round(100 * (s.coverage || 0))}%`));
+  grid.append(el("div", "secbox", `Composite ${s.v.composite == null ? "–" : s.v.composite.toFixed(2)}`));
+  for (const [k, v] of Object.entries(s.v.sections)) grid.append(el("div", "secbox", `${state.meta.section_labels[k]}: ${v == null ? "–" : v.toFixed(1)}`));
+  grid.append(el("div", "secbox", `Data coverage ${Math.round(100 * (s.v.coverage || 0))}%`));
   d.append(grid);
 
   const t = el("table"); const th = document.createElement("tr");
@@ -185,7 +241,8 @@ function showDetail(s) {
     tr.append(el("td", null, state.meta.section_labels[p.section]), el("td", null, p.label),
       el("td", "num", fmt(p.value)));
     const sc = el("td", "num"); sc.append(scoreCell(p.score)); tr.append(sc);
-    tr.append(el("td", "muted", p.how || (p.value == null ? "not available" : "")), el("td", null, p.source === "ai" ? "AI (see below)" : "filings"));
+    const how = (!state.subj && p.subjective) ? "judgement: not counted (switched off)" : (p.how || (p.value == null ? "not available" : ""));
+    tr.append(el("td", "muted", how), el("td", null, p.subjective ? "AI judgement (see below)" : p.source === "ai" ? "AI-read figure (see below)" : "filings"));
     tb.append(tr);
   }
   t.append(tb);
@@ -230,6 +287,7 @@ function renderAbout() {
     "Each ratio from Stock_Evaluation_Ratios.docx is compared only with companies of the same market, sector and type (banks with banks): percentile 0 (worst) to 10 (best).",
     "Where the docx gives a benchmark (ROE > 18%, D/E < 1, current ratio >= 2, CFO/PAT >= 0.8, PEG < 1, promoter > 35-40%, ROA > 1%, CAR above the regulatory minimum and others), a benchmark score is averaged in.",
     "Section scores average their parameters; the composite averages the sections. Stocks with less than 60% of parameters available are not ranked.",
+    "Judgement-based parameters (economic moat, bank news and management check) are AI opinions, not measured numbers. The switch above the table removes them from the composite, ranks, Shortlist and red flags; AI-read figures such as promoter holding or NPA are reported numbers and stay in.",
     "Shortlist: top " + Math.round(100 * (m.shortlist_top_fraction || 0)) + "% of each market with no red flag (loss, D/E > 2, interest cover < 1.5, profits not turning into cash, ROE far above ROCE, promoter pledge > 25%, bank capital below minimum, adverse bank news).",
     "AI parameters (moat, promoter holding and pledge, Indian bank CASA, NPA, CAR, NIM and cost of funds, US bank NPL and capital ratio, bank news) are read by Claude from filings and results; a number is used only if its quote was found on the fetched page.",
     "The full Excel workbook (with editable weights) is in the private repository under data/reports.",
