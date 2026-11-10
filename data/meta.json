@@ -1,38 +1,27 @@
 {
- "date": "2026-11-10",
+ "date": "2026-11-11",
  "notes": [
   "Nifty 100: download failed (https://www.niftyindices.com/IndexConstituent/ind_nifty100list.csv: ReadTimeout from www.niftyindices.com/IndexConstituent/ind_nifty100list.csv; https://nsearchives.nseindia.com/content/indices/ind_nifty100list.csv: ReadTimeout from nsearchives.nseindia.com/content/indices/ind_nifty100list.csv), used saved list of 100",
   "S&P 500: 503 constituents downloaded"
  ],
  "errors": {
-  "india": 1,
+  "india": 4,
   "us": 2,
-  "ai": 120
+  "ai": 1
  },
  "error_samples": {
   "india": [
-   "india:M&M: statements: HTTP 404 from api.roic.ai/v2/fundamental/income-statement/M%26M.BO"
+   "india:M&M: statements: HTTP 404 from api.roic.ai/v2/fundamental/income-statement/M%26M.BO",
+   "india:M&M: price: HTTP 404 from api.roic.ai/v2/stock-prices/latest/INE101A01026",
+   "india:LTM: price: HTTP 404 from api.roic.ai/v2/stock-prices/latest/INE214T01019",
+   "india:ZYDUSLIFE: price: HTTP 404 from api.roic.ai/v2/stock-prices/latest/INE010B01027"
   ],
   "us": [
    "us:HONA: no annual 10-K figures under CIK 2089271",
    "us:VYLR: no annual 10-K figures under CIK 2128626"
   ],
   "ai": [
-   "ai:moat:MDLZ: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:JCI: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:HLT: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:RCL: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:UPS: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:TRV: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:TMUS: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:WMB: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:SHW: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:ABNB: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:CI: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:GM: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:EOG: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:CL: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01",
-   "ai:moat:ECL: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01"
+   "ai: Anthropic spend limit reached, AI checks paused: HTTP 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.\"},\"request_id\":\"req_01"
   ]
  },
  "ai": {
@@ -40,8 +29,8 @@
   "input_tokens": 0,
   "output_tokens": 0,
   "calls": 0,
-  "skipped_time_budget": 0,
-  "due_not_run": 240
+  "skipped_time_budget": 129,
+  "due_not_run": 369
  },
  "section_labels": {
   "valuation": "Valuation",
