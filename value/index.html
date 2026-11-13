@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>Value Buying</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Value Buying</h1>
+    <p class="sub" id="meta">Loading…</p>
+    <p class="sub"><a href="../">Weekly Stock Screener</a> · Value Buying</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav class="tabs" aria-label="Market">
+    <button data-market="india" aria-selected="true">India · Nifty 100</button>
+    <button data-market="us" aria-selected="false">US · S&amp;P 500</button>
+    <button data-market="about" aria-selected="false">The six tests</button>
+  </nav>
+
+  <section class="filters" id="filters" aria-label="Filters">
+    <label>Search <input type="search" id="q" placeholder="ticker or company"></label>
+    <label>Sector <select id="sector"><option value="">All sectors</option></select></label>
+    <label>Tests passed <select id="minpass">
+      <option value="">Any</option><option value="6">All 6</option><option value="5">5 or more</option>
+      <option value="4">4 or more</option><option value="3">3 or more</option>
+    </select></label>
+    <label class="check"><input type="checkbox" id="complete"> Only stocks with no missing data</label>
+  </section>
+
+  <p class="hint" id="hint"></p>
+  <section id="detail" class="card detail" hidden></section>
+  <div class="tablewrap" id="tablewrap"><table id="table"><thead></thead><tbody></tbody></table></div>
+  <section id="about" class="card about" hidden></section>
+</main>
+
+<footer class="wrap foot">
+  Personal screening aid, updated every Monday with the Weekly Stock Screener's data. Not investment advice:
+  read the company's filings before acting. US: SEC EDGAR filings, Finnhub prices and PE history. India: ROIC.AI.
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
